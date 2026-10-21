@@ -1,0 +1,97 @@
+// MedTake – סכמת מסד הנתונים
+// שלוש טבלאות: משתמשים, מרשמים, ורשומות נטילה.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  caregiver
+  patient
+}
+
+enum PrescriptionForm {
+  tablet
+  capsule
+  syrup
+  drops
+  injection
+  cream
+  other
+}
+
+enum PrescriptionStatus {
+  active
+  paused
+  finished
+}
+
+/// מטפלים ומטופלים. מטופל מקושר למטפל אחד דרך caregiverId.
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  fullName     String    @db.VarChar(100)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String
+  role         Role
+  caregiverId  String?   @db.Uuid
+  birthDate    DateTime? @db.Date
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+
+  caregiver            User?          @relation("CaregiverPatients", fields: [caregiverId], references: [id], onDelete: Cascade)
+  patients             User[]         @relation("CaregiverPatients")
+  prescriptions        Prescription[] @relation("PatientPrescriptions")
+  createdPrescriptions Prescription[] @relation("CreatedPrescriptions")
+  intakeLogs           IntakeLog[]
+
+  @@index([caregiverId])
+}
+
+/// מרשם – האובייקט המרכזי. מגדיר תרופה, לוח זמנים ומלאי.
+model Prescription {
+  id                 String             @id @default(uuid()) @db.Uuid
+  patientId          String             @db.Uuid
+  createdById        String             @db.Uuid
+  drugName           String             @db.VarChar(100)
+  dosage             String             @db.VarChar(50)
+  form               PrescriptionForm
+  unitsPerDose       Int
+  scheduleDays       Int[]
+  scheduleTimes      String[]
+  startDate          DateTime           @db.Date
+  endDate            DateTime?          @db.Date
+  instructions       String             @default("") @db.VarChar(500)
+  missedAfterMinutes Int                @default(60)
+  stockQuantity      Int
+  lowStockThreshold  Int
+  status             PrescriptionStatus @default(active)
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @db.Timestamptz(3)
+
+  patient    User        @relation("PatientPrescriptions", fields: [patientId], references: [id], onDelete: Cascade)
+  createdBy  User        @relation("CreatedPrescriptions", fields: [createdById], references: [id], onDelete: Cascade)
+  intakeLogs IntakeLog[]
+
+  @@index([patientId])
+}
+
+/// סימון "נלקח". נשמר רק למנות שסומנו; מנות ממתינות/שפוספסו מחושבות.
+model IntakeLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  prescriptionId String   @db.Uuid
+  patientId      String   @db.Uuid
+  scheduledAt    DateTime @db.Timestamptz(3)
+  takenAt        DateTime @db.Timestamptz(3)
+  unitsDeducted  Int
+  note           String?  @db.VarChar(200)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  patient      User         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([prescriptionId, scheduledAt])
+  @@index([patientId, scheduledAt])
+}

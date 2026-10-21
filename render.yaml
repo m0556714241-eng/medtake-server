@@ -1,0 +1,25 @@
+# הגדרת פריסה ל-Render (Blueprint).
+# מסד הנתונים נמצא אצל ספק נפרד (Neon / Supabase) – מדביקים את הכתובת שלו ב-DATABASE_URL.
+services:
+  - type: web
+    name: medtake-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false
