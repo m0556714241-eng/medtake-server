@@ -61,6 +61,8 @@
 |---|---|
 | שם המשתמש | מגיע מ-`user` שבקונטקסט |
 | התראות מלאי נמוך | `GET /alerts/low-stock` → `LowStockAlert[]` |
+| הודעות מהמטופלים (מטפל) | `GET /messages` → `Message[]` (50 האחרונות, החדשות קודם). סינון למטופל אחד: `?patientId=` |
+| מחיקת הודעה (מטפל) | `DELETE /messages/:id` → 204 |
 
 ### עמוד ניהול (`Manager`, מטפל)
 | פעולה | נתיב | הערות |
@@ -94,6 +96,8 @@
 | סימון "נלקח" | `POST /intakes` | `{ prescriptionId, scheduledAt }`. את שני הערכים מעתיקים **בדיוק** מה-`Dose` |
 | ביטול סימון | `DELETE /intakes/:intakeId` | את `intakeId` לוקחים מה-`Dose` |
 | התראת מלאי | `GET /alerts/low-stock`, או השדה `isLowStock` שבכל `Dose` | |
+| שליחת הודעה למטפל | `POST /messages` | `{ text }` – עד 500 תווים. המטפל נקבע לפי המטופל המחובר |
+| ההודעות ששלחתי | `GET /messages` | |
 
 הסרגל "נלקחו X מתוך Y" מחושב בלקוח: מספר המנות עם `status === 'taken'`, מתוך האורך של הרשימה.
 
@@ -186,6 +190,12 @@
   "stockQuantity": 2, "lowStockThreshold": 5 }
 ```
 
+### Message
+```json
+{ "id": "…", "patientId": "…", "patientName": "אברהם כהן",
+  "text": "האקמול כמעט נגמר", "createdAt": "2026-10-21T10:15:00+03:00" }
+```
+
 ## 6. תאריכים
 - תאריך בלי שעה נכתב כ-`YYYY-MM-DD`. דוגמאות: `birthDate`, `startDate`, `from`, `to`.
 - זמן של מנה נכתב בפורמט ISO עם היסט שעון ישראל: `2026-10-21T08:00:00+03:00`, ובחורף `+02:00`.
@@ -203,6 +213,9 @@
 | `GET /doses*` | ✅ עם `patientId` | ✅ רק שלו |
 | `/intakes` | ❌ 403 | ✅ רק שלו |
 | `/alerts/low-stock` | ✅ של כל המטופלים שלו | ✅ שלו |
+| `POST /messages` | ❌ 403 | ✅ למטפל שלו |
+| `GET /messages` | ✅ מכל המטופלים שלו | ✅ ששלח |
+| `DELETE /messages/:id` | ✅ רק שקיבל | ❌ 403 |
 
 ## 8. משתמשי הדגמה
 מטפלת: `rachel@medtake.dev`. מטופל שלה: `avraham@medtake.dev`. הסיסמה של שניהם: `Medtake123`. רשימה מלאה נמצאת ב-README.

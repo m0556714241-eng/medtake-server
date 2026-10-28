@@ -39,6 +39,10 @@
     {
       "name": "Alerts",
       "description": "התראות מלאי נמוך"
+    },
+    {
+      "name": "Messages",
+      "description": "הודעות מהמטופל למטפל שלו"
     }
   ],
   "components": {
@@ -860,6 +864,59 @@
           "patientName": "אברהם כהן",
           "stockQuantity": 2,
           "lowStockThreshold": 5
+        }
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "example": {
+          "text": "האקמול כמעט נגמר"
+        }
+      },
+      "Message": {
+        "type": "object",
+        "required": [
+          "id",
+          "patientId",
+          "patientName",
+          "text",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientName": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "example": {
+          "id": "6f1c2a3b-5555-4a5b-9c0d-000000000005",
+          "patientId": "6f1c2a3b-2222-4a5b-9c0d-000000000002",
+          "patientName": "אברהם כהן",
+          "text": "האקמול כמעט נגמר",
+          "createdAt": "2026-10-21T10:15:00+03:00"
         }
       }
     }
@@ -2836,6 +2893,237 @@
                 "example": {
                   "message": "חסר Token – יש להתחבר למערכת",
                   "statusCode": 401
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages": {
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "רשימת הודעות (50 האחרונות, החדשות קודם)",
+        "description": "מטפל: מכל המטופלים שלו, או ממטופל אחד עם patientId. מטופל: ההודעות ששלח.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "query",
+            "required": false,
+            "description": "מטפל בלבד – סינון למטופל אחד",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "רשימת הודעות",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "נתונים לא תקינים",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "הנתונים שנשלחו אינם תקינים",
+                  "statusCode": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "אין Token או שהוא לא תקין",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "חסר Token – יש להתחבר למערכת",
+                  "statusCode": 401
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (או שייך למשתמש אחר)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "המשאב המבוקש לא נמצא",
+                  "statusCode": 404
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "שליחת הודעה למטפל (מטופל בלבד)",
+        "description": "המטפל נקבע לפי המטופל המחובר – לא נשלח בגוף הבקשה.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "נשלחה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "נתונים לא תקינים",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "הנתונים שנשלחו אינם תקינים",
+                  "statusCode": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "אין Token או שהוא לא תקין",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "חסר Token – יש להתחבר למערכת",
+                  "statusCode": 401
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה לתפקיד הזה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "אין לך הרשאה לבצע פעולה זו",
+                  "statusCode": 403
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "מזהה ההודעה",
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "delete": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "מחיקת הודעה שהתקבלה (מטפל בלבד)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "נמחקה"
+          },
+          "401": {
+            "description": "אין Token או שהוא לא תקין",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "חסר Token – יש להתחבר למערכת",
+                  "statusCode": 401
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "אין הרשאה לתפקיד הזה",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "אין לך הרשאה לבצע פעולה זו",
+                  "statusCode": 403
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "לא נמצא (או שייך למשתמש אחר)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "message": "המשאב המבוקש לא נמצא",
+                  "statusCode": 404
                 }
               }
             }

@@ -1,5 +1,5 @@
 // MedTake – סכמת מסד הנתונים
-// שלוש טבלאות: משתמשים, מרשמים, ורשומות נטילה.
+// ארבע טבלאות: משתמשים, מרשמים, רשומות נטילה, והודעות מהמטופל למטפל.
 
 generator client {
   provider = "prisma-client-js"
@@ -47,6 +47,8 @@ model User {
   prescriptions        Prescription[] @relation("PatientPrescriptions")
   createdPrescriptions Prescription[] @relation("CreatedPrescriptions")
   intakeLogs           IntakeLog[]
+  sentMessages         Message[]      @relation("PatientMessages")
+  receivedMessages     Message[]      @relation("CaregiverMessages")
 
   @@index([caregiverId])
 }
@@ -94,4 +96,20 @@ model IntakeLog {
 
   @@unique([prescriptionId, scheduledAt])
   @@index([patientId, scheduledAt])
+}
+
+/// הודעה שהמטופל שולח למטפל שלו (למשל "התרופה נגמרת").
+/// caregiverId נשמר בזמן השליחה – כך שהמטפל מקבל את כל ההודעות של המטופלים שלו בשאילתה אחת.
+model Message {
+  id          String   @id @default(uuid()) @db.Uuid
+  patientId   String   @db.Uuid
+  caregiverId String   @db.Uuid
+  text        String   @db.VarChar(500)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  patient   User @relation("PatientMessages", fields: [patientId], references: [id], onDelete: Cascade)
+  caregiver User @relation("CaregiverMessages", fields: [caregiverId], references: [id], onDelete: Cascade)
+
+  @@index([caregiverId, createdAt])
+  @@index([patientId, createdAt])
 }

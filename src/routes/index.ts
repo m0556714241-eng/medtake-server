@@ -4,6 +4,7 @@ import * as auth from '../controllers/auth.controller';
 import * as doses from '../controllers/doses.controller';
 import { health } from '../controllers/health.controller';
 import * as intakes from '../controllers/intakes.controller';
+import * as messages from '../controllers/messages.controller';
 import * as patients from '../controllers/patients.controller';
 import * as prescriptions from '../controllers/prescriptions.controller';
 import { authenticate, requireRole } from '../middleware/auth';
@@ -50,3 +51,8 @@ apiRouter.delete('/intakes/:id', patientOnly, intakes.unmark);
 
 // התראות
 apiRouter.get('/alerts/low-stock', loggedIn, alerts.lowStock);
+
+// הודעות – מטופל שולח למטפל שלו; שניהם רואים; מטפל מוחק
+apiRouter.post('/messages', patientOnly, messages.send);
+apiRouter.get('/messages', loggedIn, messages.list);
+apiRouter.delete('/messages/:id', caregiverOnly, messages.remove);

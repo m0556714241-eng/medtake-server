@@ -148,6 +148,7 @@ export const openApiDocument = {
     { name: 'Doses', description: 'מנות מחושבות לפי לוח הזמנים (תצוגה יומית ושבועית)' },
     { name: 'Intakes', description: 'סימון "נלקח" וביטולו – מטופל בלבד' },
     { name: 'Alerts', description: 'התראות מלאי נמוך' },
+    { name: 'Messages', description: 'הודעות מהמטופל למטפל שלו' },
   ],
   components: {
     securitySchemes: {
@@ -418,6 +419,30 @@ export const openApiDocument = {
           lowStockThreshold: 5,
         },
       },
+      SendMessageRequest: {
+        type: 'object',
+        required: ['text'],
+        properties: { text: { type: 'string', minLength: 1, maxLength: 500 } },
+        example: { text: 'האקמול כמעט נגמר' },
+      },
+      Message: {
+        type: 'object',
+        required: ['id', 'patientId', 'patientName', 'text', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          patientId: { type: 'string', format: 'uuid' },
+          patientName: { type: 'string' },
+          text: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+        example: {
+          id: '6f1c2a3b-5555-4a5b-9c0d-000000000005',
+          patientId: examplePatient.id,
+          patientName: 'אברהם כהן',
+          text: 'האקמול כמעט נגמר',
+          createdAt: '2026-10-21T10:15:00+03:00',
+        },
+      },
     },
   },
   paths: {
@@ -651,6 +676,42 @@ export const openApiDocument = {
         responses: {
           200: ok('רשימת התראות', { type: 'array', items: ref('LowStockAlert') }),
           ...errors(401),
+        },
+      },
+    },
+    '/api/messages': {
+      get: {
+        tags: ['Messages'],
+        summary: 'רשימת הודעות (50 האחרונות, החדשות קודם)',
+        description: 'מטפל: מכל המטופלים שלו, או ממטופל אחד עם patientId. מטופל: ההודעות ששלח.',
+        security: bearer,
+        parameters: [queryParam('patientId', 'מטפל בלבד – סינון למטופל אחד', { type: 'string', format: 'uuid' })],
+        responses: {
+          200: ok('רשימת הודעות', { type: 'array', items: ref('Message') }),
+          ...errors(400, 401, 404),
+        },
+      },
+      post: {
+        tags: ['Messages'],
+        summary: 'שליחת הודעה למטפל (מטופל בלבד)',
+        description: 'המטפל נקבע לפי המטופל המחובר – לא נשלח בגוף הבקשה.',
+        security: bearer,
+        requestBody: { required: true, content: json(ref('SendMessageRequest')) },
+        responses: {
+          201: ok('נשלחה', ref('Message')),
+          ...errors(400, 401, 403),
+        },
+      },
+    },
+    '/api/messages/{id}': {
+      parameters: [idParam('מזהה ההודעה')],
+      delete: {
+        tags: ['Messages'],
+        summary: 'מחיקת הודעה שהתקבלה (מטפל בלבד)',
+        security: bearer,
+        responses: {
+          204: { description: 'נמחקה' },
+          ...errors(401, 403, 404),
         },
       },
     },

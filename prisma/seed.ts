@@ -1,6 +1,6 @@
 /**
  * נתוני הדגמה ל-MedTake.
- * יוצר 3 מטפלים, 5 מטופלים, מרשמים בסטטוסים ובצורות שונים,
+ * יוצר 4 מטפלים (אחת בלי מטופלים), 9 מטופלים, מרשמים בסטטוסים ובצורות שונים,
  * והיסטוריית נטילה של השבועיים האחרונים. כל הנתונים מומצאים.
  *
  * בטוח להרצה חוזרת: מוחק ויוצר מחדש רק את משתמשי ההדגמה (@medtake.dev).
@@ -99,6 +99,34 @@ const data: CaregiverSeed[] = [
           { drugName: 'אמוקסיצילין', dosage: '500 מ"ג', form: 'capsule', unitsPerDose: 1, days: ALL_DAYS, times: ['08:00', '14:00', '20:00'], startOffset: -20, endOffset: -11, instructions: 'להשלים את כל הטיפול', stockQuantity: 0, lowStockThreshold: 0, status: 'finished' },
         ],
       },
+      {
+        fullName: 'בנימין גולד',
+        email: `binyamin${DEMO_DOMAIN}`,
+        birthDate: '1938-03-17',
+        joinedDaysAgo: 10,
+        adherence: 0.6,
+        prescriptions: [
+          { drugName: 'פוסיד', dosage: '40 מ"ג', form: 'tablet', unitsPerDose: 1, days: ALL_DAYS, times: ['08:00'], startOffset: -9, instructions: 'בבוקר', stockQuantity: 2, lowStockThreshold: 5 },
+        ],
+      },
+      {
+        fullName: 'לאה שטרן',
+        email: `leah${DEMO_DOMAIN}`,
+        birthDate: '1952-06-25',
+        joinedDaysAgo: 3,
+        adherence: 1,
+        prescriptions: [],
+      },
+      {
+        fullName: 'ציפורה רוזן',
+        email: `tzipora${DEMO_DOMAIN}`,
+        birthDate: '1945-10-02',
+        joinedDaysAgo: 7,
+        adherence: 1,
+        prescriptions: [
+          { drugName: 'ויטמין C', dosage: '500 מ"ג', form: 'tablet', unitsPerDose: 1, days: ALL_DAYS, times: ['10:00'], startOffset: -6, instructions: '', stockQuantity: 20, lowStockThreshold: 5 },
+        ],
+      },
     ],
   },
   {
@@ -148,7 +176,21 @@ const data: CaregiverSeed[] = [
           { drugName: 'אינסולין לנטוס', dosage: '20 יחידות', form: 'injection', unitsPerDose: 1, days: ALL_DAYS, times: ['22:00'], startOffset: -14, instructions: 'זריקה תת-עורית', missedAfterMinutes: 60, stockQuantity: 15, lowStockThreshold: 5 },
         ],
       },
+      {
+        fullName: 'דבורה פרידמן',
+        email: `dvora${DEMO_DOMAIN}`,
+        birthDate: '1960-04-11',
+        joinedDaysAgo: 5,
+        adherence: 1,
+        prescriptions: [],
+      },
     ],
+  },
+  {
+    fullName: 'אסתר מזרחי',
+    email: `esther${DEMO_DOMAIN}`,
+    joinedDaysAgo: 1,
+    patients: [],
   },
 ];
 

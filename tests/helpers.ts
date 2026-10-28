@@ -59,6 +59,7 @@ export const createPrescription = async (
 };
 
 export const resetDatabase = async () => {
+  await prisma.message.deleteMany();
   await prisma.intakeLog.deleteMany();
   await prisma.prescription.deleteMany();
   await prisma.user.deleteMany({ where: { role: 'patient' } });
